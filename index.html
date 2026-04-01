@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>智慧明眸 · 守护眼底健康 | Tailwind版</title>
+    <!-- Tailwind CSS 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 字体 Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- GSAP 核心库和 ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        /* 自定义毛玻璃效果 (Tailwind不直接支持backdrop-filter的复杂模糊，用自定义类) */
+        .glass-custom {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 25px 40px -18px rgba(0, 100, 120, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-customq {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 25px 40px -18px rgba(0, 100, 120, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }        
+        .glass-custom:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 35px 50px -20px #1b7b8e55;
+        }
+        .glass-heavy {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        /* 数字光效 */
+        .glow-number {
+            animation: softPulse 2s infinite;
+        }
+        @keyframes softPulse {
+            0% { text-shadow: 0 0 5px #63b3b3; }
+            50% { text-shadow: 0 0 15px #319795; }
+            100% { text-shadow: 0 0 5px #63b3b3; }
+        }
+        /* 回到顶部按钮样式 */
+        .back-top {
+            position: fixed;
+            bottom: 30px;
+            right: 24px;
+            width: 46px;
+            height: 46px;
+            background: #1b7b8e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 90;
+            box-shadow: 0 4px 12px rgba(27,123,142,0.25);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+        .back-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* 为GSAP动画添加初始透明度 (可选) */
+        .gsap-fade {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        /* 联系表单弹窗样式 */
+        .contact-modal {
+            transition: all 0.3s ease;
+        }
+        .contact-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .contact-modal .modal-card {
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .contact-modal.show .modal-card {
+            transform: scale(1);
+        }
+        .fixed-nav {
+                @apply  top-0 left-0 right-0 z-50 w-full shadow-md; 
+                background: linear-gradient(to right, rgba(255,255,255,0.7), rgba(255,255,255,0.7)), 
+                            url("8767.jpg_wh860.jpg") center/cover no-repeat;
+             
+                @apply py-6;
+
+                opacity: 1 !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important; /* 兼容移动端 */
+            }
+    </style>
+</head>
+<body class="bg-[#fafdff] text-[#1a2b3e] antialiased overflow-x-hidden">
+
+    <!-- 弹窗遮罩 (身份选择) -->
+    <div class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[999] flex items-center justify-center invisible opacity-0 transition-all duration-300" id="identityModal">
+        <div class="bg-white max-w-[420px] w-[90%] rounded-[36px] p-9 shadow-2xl text-center border-2 border-white/60 scale-95 transition-all duration-300" id="modalCard">
+            <h2 class="text-[#0e5f6f] text-3xl font-bold mb-3"><i class="fas fa-eye text-[#1b7b8e] mr-2"></i>智慧明眸</h2>
+            <p class="text-gray-500 mb-7">请填写昵称并选择身份，为您切换专属页面</p>
+            <input type="text" id="nicknameInput" placeholder="您的昵称（如：李大叔）" maxlength="20" class="w-full px-5 py-4 border-2 border-gray-200 rounded-full text-base outline-none focus:border-[#1b7b8e] transition mb-6">
+            <div class="flex gap-4 justify-center mb-8">
+                <div class="flex-1 bg-gray-100 border-2 border-transparent py-3 rounded-full font-semibold text-lg cursor-pointer transition flex items-center justify-center gap-2 selected:bg-[#1b7b8e] selected:text-white selected:border-[#0e5f6f]" id="rolePatient">
+                    <i class="fas fa-user"></i> 患者
+                </div>
+                <div class="flex-1 bg-gray-100 border-2 border-transparent py-3 rounded-full font-semibold text-lg cursor-pointer transition flex items-center justify-center gap-2" id="roleDoctor">
+                    <i class="fas fa-stethoscope"></i> 医生
+                </div>
+            </div>
+            <button class="w-full bg-[#1b7b8e] text-white py-4 rounded-full font-bold text-lg hover:bg-[#0e5f6f] transition disabled:opacity-50" id="confirmBtn">进入患者页面</button>
+            <p class="mt-5 text-xs text-gray-400">（患者端为默认主页，医生端将跳转）</p>
+        </div>
+    </div>
+
+    <!-- 联系我们弹窗 -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] flex items-center justify-center invisible opacity-0 transition-all duration-300 contact-modal " id="contactModal">
+        <div class="bg-white max-w-[500px] w-[90%] rounded-[32px] shadow-2xl modal-card">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-[#0e5f6f]">
+                        <i class="fas fa-phone-alt mr-2 text-[#1b7b8e]"></i>联系村医
+                    </h3>
+                    <button class="text-gray-400 hover:text-gray-600 transition text-2xl" id="closeContactModalBtn">&times;</button>
+                </div>
+                <p class="text-gray-500 mb-6 text-sm">请填写以下信息，我们将安排最近的村医与您联系</p>
+                <form id="contactForm">
+                    <div class="mb-5">
+                        <label class="block text-gray-700 font-semibold mb-2">姓名 <span class="text-red-500">*</span></label>
+                        <input type="text" id="contactName" placeholder="请输入您的姓名" class="w-full px-5 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition">
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-gray-700 font-semibold mb-2">电话号码 <span class="text-red-500">*</span></label>
+                        <input type="tel" id="contactPhone" placeholder="请输入手机号码" class="w-full px-5 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">问题描述 <span class="text-red-500">*</span></label>
+                        <textarea id="contactMessage" rows="4" placeholder="请详细描述您的问题，例如：视力模糊、眼睛干涩、想预约筛查等" class="w-full px-5 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition resize-none"></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 bg-[#1b7b8e] text-white py-3 rounded-xl font-bold hover:bg-[#0e5f6f] transition">提交咨询</button>
+                        <button type="button" id="cancelContactBtn" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <header id="mainHeader" class="fixed-nav py-6">
+        <!-- 导航 (毛玻璃 + Tailwind) -->
+        <nav class="container mx-auto px-4 flex flex-wrap items-center justify-between ">
+            <a href="#" class="flex items-center space-x-3">
+                <img src="logo.png" alt="星星图标" class="w-10 h-10 inline-block text-starOrange"> <!-- 图片从w-8放大到w-10 -->
+                <span class="text-2xl tracking-tight text-[#0e5f6f]">智慧明眸</span> <!-- 文字从text-2xl放大到text-3xl -->
+            </a>
+      
+            <div class="hidden md:flex gap-8 font-medium text-gray-700">
+                <a href="#how" class="hover:text-[#1b7b8e] transition">如何筛查</a>
+                <a href="#advantages" class="hover:text-[#1b7b8e] transition">项目优势</a>
+                <a href="#results" class="hover:text-[#1b7b8e] transition">试点成果</a>
+                <a href="#checkin" class="hover:text-[#1b7b8e] transition">健康打卡</a>
+                <a href="#faq" class="hover:text-[#1b7b8e] transition">常见问题</a>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 bg-[#1b7b8e]/10 px-4 py-2 rounded-full font-semibold text-sm text-[#0e5f6f] cursor-pointer border border-[#1b7b8e]/20 hover:bg-[#1b7b8e]/20 transition" id="identityTrigger">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="identityDisplay">身份</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+                <!-- Hero 区域 (毛玻璃卡片 + 背景图片) -->
+        <section class="pt-12 pb-10 relative overflow-hidden mt-8 h-[600px]">
+            <!-- 背景图片层 -->
+            <div class="absolute inset-0 z-0">
+                <img src="7.png" 
+                    alt="眼底筛查背景" 
+                    class="w-full h-full object-cover opacity-80 "
+                    onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(to right, #e6f7f5 100%, #d4eae5 100%)'">
+                <!-- 渐变叠加层，增强文字可读性 -->
+                <div class="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent"></div>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="grid md:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
+                    <!-- 左侧文字内容 -->
+                    <div class="backdrop-blur-sm bg-white/0 p-8 rounded-[28px] border border-white/0">
+                        <h1 class="text-4xl md:text-5xl font-bold leading-tight text-gray-800">
+                            眼底筛查 <span class="bg-gradient-to-r from-[#1b7b8e] to-[#4e9d73] bg-clip-text text-transparent">就在村口</span><br>早发现 守住光明
+                        </h1>
+                        <p class="text-lg text-gray-700 my-6 max-w-[560px] font-medium">智慧明眸 — 全国首个专为农村糖尿病患者设计的AI眼底筛查系统。无需散瞳、10分钟出结果，医保报销70%，家门口守护您的视力。</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="#how" class="bg-[#1b7b8e] text-white px-7 py-3 rounded-full font-semibold shadow-lg hover:bg-[#0e5f6f] hover:-translate-y-0.5 transition flex items-center"><i class="fas fa-play mr-2"></i>一分钟了解</a>
+                            <a href="#" id="contactDoctorBtn" class="border-2 border-[#1b7b8e] text-[#0e5f6f] px-7 py-3 rounded-full font-semibold hover:bg-[#1b7b8e] hover:text-white transition bg-white/80 backdrop-blur-sm">咨询村医</a>
+                        </div>
+                        <div class="flex flex-wrap gap-4 mt-6">
+                            <span class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm font-semibold text-[#0e5f6f] text-sm"><i class="fas fa-check-circle text-[#5fa777] mr-1"></i> 筛查率↑72%</span>
+                            <span class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm font-semibold text-[#0e5f6f] text-sm"><i class="fas fa-hourglass-half text-[#5fa777] mr-1"></i> 10分钟完成</span>
+                            <span class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm font-semibold text-[#0e5f6f] text-sm"><i class="fas fa-shield-alt text-[#5fa777] mr-1"></i> AI准确率86.7%</span>
+                        </div>
+                    </div>
+
+                    <!-- 右侧卡片区域 -->
+                    <div class=" p-6 rounded-[28px]  min-h-[340px] flex items-center ">
+                        <div class="grid grid-cols-2 gap-4 w-full">
+                            <div class=" rounded-xl p-4 text-center shadow-sm hover:shadow-md transition hover:-translate-y-1">
+                                <i class="fas fa-camera-retro text-4xl text-[#1b7b8e] mb-2"></i>
+                                <strong>明眸筛查仪</strong>
+                                <br>
+                                <span class="text-xs text-gray-500">1.8kg 便携</span>
+                            </div>
+                            <div class=" rounded-xl p-4 text-center shadow-sm hover:shadow-md transition hover:-translate-y-1">
+                                <i class="fas fa-microchip text-4xl text-[#5fa777] mb-2"></i>
+                                <strong>AI诊断</strong>
+                                <br>
+                                <span class="text-xs text-gray-500">≤3秒分析</span>
+                            </div>
+                            <div class=" rounded-xl p-4 text-center shadow-sm hover:shadow-md transition hover:-translate-y-1">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-[#1b7b8e] mb-2"></i>
+                                <strong>明眸云</strong>
+                                <br>
+                                <span class="text-xs text-gray-500">档案随身</span>
+                            </div>
+                            <div class=" rounded-xl p-4 text-center shadow-sm hover:shadow-md transition hover:-translate-y-1">
+                                <i class="fas fa-mobile-alt text-4xl text-[#1b7b8e] mb-2"></i>
+                                <strong>手机报告</strong>
+                                <br>
+                                <span class="text-xs text-gray-500">当场知晓</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="screening" class="py-16 bg-starGray ">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h1 class="text-5xl font-bold mb-4 gsap-fade">疾病危害</h1>
+                    <p class="max-w-2xl mx-auto text-gray-600 gsap-fade">糖尿病视网膜病变是糖尿病致盲主因，农村检出率 23.5%，60% 患者延误诊疗致不可逆盲，加重家庭负担，拖累基层医疗，造成沉重社会医疗成本</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-8 card-animate max-w-6xl mx-auto gsap-fade">
+                    <!-- 缩小容器：使用 max-w-3xl 限制最大宽度，mx-auto 居中 -->
+                    <div class="max-w-4xl mx-auto">
+                        <div class="w-full aspect-video bg-gray-900 rounded-lg overflow-hidden video-container relative"
+                            onmouseenter="document.getElementById('aiVideo').play()"
+                            onmouseleave="document.getElementById('aiVideo').pause()">
+                            <video 
+                                id="aiVideo"
+                                class="w-full h-full object-contain"
+                                muted 
+                                playsinline 
+                                webkit-playsinline 
+                                preload="metadata"
+                                loop
+                            >
+                                <source src="12.mp4" type="video/mp4">
+                                您的浏览器不支持HTML5视频播放，请升级浏览器后重试
+                            </video>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <p class="text-gray-600 gsap-fade">提示：鼠标悬浮即可静音自动播放演示视频</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <!-- 主容器 (居中布局) -->
+    <div class="max-w-[1300px] mx-auto px-5 ">
+        <!-- 行业痛点模块 (左文字右图片，高级风格) -->
+        <section id="intro" class="relative py-16 px-6 md:px-12 bg-white border-b border-gray-200 z-30 my-8 rounded-[28px] overflow-hidden shadow-sm gsap-fade">
+            <div class="max-w-7xl mx-auto">
+                <!-- 左右布局，顶部对齐更自然 -->
+                <div class="flex flex-col md:flex-row gap-12 items-start gsap-fade">
+                    
+                    <!-- 左侧：文字内容 -->
+                    <div class="w-full md:w-5/12 flex flex-col">
+                        <div class="mb-4">
+                            <span class="text-[#1b7b8e] text-sm font-semibold tracking-wide uppercase bg-[#1b7b8e]/10 px-4 py-1.5 rounded-full inline-block">行业现状</span>
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">痛点分析</h2>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm gsap-fade">
+                        农村糖尿病眼病筛查面临严重的视觉与操作限制
+                        </p>
+                        
+                        <!-- 痛点列表 -->
+                        <div class="space-y-3">
+                            <div class="relative p-4 border-l-4 border-[#1b7b8e] bg-[#f8fafc] rounded-r-xl transition-all duration-300 hover:bg-[#f1f5f9]">
+                                <h4 class="font-bold text-gray-800 text-base mb-1 gsap-fade">视觉辨不清</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed gsap-fade">微小病灶诊断准确率低，传统设备视野受限，早期病变难以识别</p>
+              
+                            </div>
+                            
+                            <div class="relative p-4 border-l-4 border-[#1b7b8e] bg-[#f8fafc] rounded-r-xl transition-all duration-300 hover:bg-[#f1f5f9]">
+                                <h4 class="font-bold text-gray-800 text-base mb-1 gsap-fade">物理到不了</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed gsap-fade">80%村卫生室无眼底相机，深部病灶活检困难，容易引发并发症</p>
+                          
+                            </div>
+                            
+                            <div class="relative p-4 border-l-4 border-[#1b7b8e] bg-[#f8fafc] rounded-r-xl transition-all duration-300 hover:bg-[#f1f5f9]">
+                                <h4 class="font-bold text-gray-800 text-base mb-1 gsap-fade">医疗资源壁垒</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed gsap-fade">仅15%乡镇卫生院能独立诊断DR，远程协同诊疗生态缺失</p>
+                   
+                            </div>
+                        </div>
+                        
+                        <!-- 底部数据标签 -->
+                        <div class="mt-8 pt-5 border-t border-gray-200 flex flex-wrap gap-4">
+                            <div class="flex items-center gap-2 gsap-fade">
+                                <div class="w-8 h-8 rounded-full bg-[#1b7b8e]/10 flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-[#1b7b8e] text-xs"></i>
+                                </div>
+                                <span class="text-gray-600 text-sm">筛查率↑<span class="font-bold text-[#1b7b8e]">72%</span></span>
+                            </div>
+                            <div class="flex items-center gap-2 gsap-fade">
+                                <div class="w-8 h-8 rounded-full bg-[#1b7b8e]/10 flex items-center justify-center">
+                                    <i class="fas fa-clock text-[#1b7b8e] text-xs"></i>
+                                </div>
+                                <span class="text-gray-600 text-sm"><span class="font-bold text-[#1b7b8e]">60%</span>延误致盲</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧：图片网格 (带真实图片) -->
+                    <div class="w-full md:w-9/12">
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <!-- 大图：传统设备 vs AI增强对比 -->
+                            <div class="col-span-2 relative rounded-xl overflow-hidden border border-[#1b7b8e]/20 group h-70 gsap-fade">
+                                <img src="4.jpg" 
+                                    alt="传统设备 vs AI增强对比" 
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                <div class="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent z-10">
+                                    <p class="text-xs text-white text-center">AI-Enhanced View · 微小病灶精准识别</p>
+                                </div>
+                            </div>
+                            
+                            <!-- 左下：物理痛点配图 -->
+                            <div class="relative rounded-xl overflow-hidden border border-gray-200 h-52 group gsap-fade max-w-[300px]">
+                                <img src="5.png" 
+                                    alt="物理痛点示意图" 
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                <div class="absolute bottom-2 left-2 z-10">
+                                    <p class="text-[10px] text-white bg-black/60 px-2 py-0.5 rounded-full">80%村卫生室无设备</p>
+                                </div>
+                            </div>
+                            
+                            <!-- 右下：资源壁垒配图 -->
+                            <div class="relative rounded-xl overflow-hidden border border-gray-200 h-52 group gsap-fade ">
+                                <img src="8.jpg" 
+                                    alt="资源壁垒示意图" 
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                <div class="absolute bottom-2 left-2 z-10">
+                                    <p class="text-[10px] text-white bg-black/60 px-2 py-0.5 rounded-full">仅15%卫生院能独立诊断DR</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- 为什么需要 (每个主要区块添加 gsap-fade 类用于动画) -->
+        <section class="gsap-fade">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">糖尿病会悄悄“偷”走视力</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mb-8">糖尿病视网膜病变（DR）是成年人致盲的首因。农村地区每10个糖尿病患者就有2~3人面临眼底病变风险，但传统筛查设备少、进城难，大多发现即晚期。</p>
+            <div class="bg-[#eef3f8] rounded-2xl p-6">
+                <div class="flex flex-wrap gap-6 items-center">
+                    <div class="flex-1 min-w-[240px]"><i class="fas fa-quote-left text-4xl text-[#1b7b8e] opacity-20"></i><p class="mt-2 text-lg">以前去县医院查眼睛，来回要一整天，还要花钱散瞳。现在村里就能查，拍个照几分钟，当场告诉我没事，心里踏实多了。<br><br>—— 大庆村</p></div>
+                    <div><span class="bg-[#daf1e4] text-[#1f7044] px-3 py-1 rounded-full text-sm font-semibold"><i class="far fa-smile"></i> 真实患者故事</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how" class="gsap-fade mt-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">筛查只需三步，就在您身边</h2>
+            <p class="text-gray-500 text-center mb-10 max-w-2xl mx-auto">简单便捷的操作流程，让眼底筛查触手可及</p>
+            
+            <!-- 步骤容器：使用 flex 布局，并添加相对定位来容纳箭头 -->
+            <div class="relative flex flex-wrap justify-center items-start gap-4 md:gap-8">
+                
+                <!-- 第一步 -->
+                <div class="step-item flex-1 min-w-[240px] max-w-[320px] text-center relative">
+                    <div class="relative mb-5">
+                        <div class="w-full h-48 rounded-2xl overflow-hidden shadow-md bg-gradient-to-br from-[#e6f3f5] to-white flex items-center justify-center border border-[#1b7b8e]/20">
+                            <img src="1.png" 
+                                alt="村卫生室拍照" 
+                                class="w-full h-full object-cover"
+                                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-camera-retro text-5xl text-[#1b7b8e]/40\'></i>'">
+                            <i class="fas fa-camera-retro text-5xl text-[#1b7b8e]/40" style="display: none;"></i>
+                        </div>
+                        <div class="absolute -top-3 -left-3 w-10 h-10 bg-[#1b7b8e] text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">1</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">村卫生室拍照</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">村医协助，坐定、看镜头，非散瞳无不适</p>
+                </div>
+                
+                <!-- 箭头 (第一步到第二步) - 上移使其与图片中心对齐 -->
+                <div class="arrow-container flex items-center justify-center text-[#1b7b8e] text-3xl md:text-4xl font-bold self-start md:self-center mx-0 md:mx-2 mt-0 md:mt-[-20px]">
+                    <i class="fas fa-arrow-right hidden md:inline-block"></i>
+                    
+                </div>
+                
+                <!-- 第二步 -->
+                <div class="step-item flex-1 min-w-[240px] max-w-[320px] text-center relative">
+                    <div class="relative mb-5">
+                        <div class="w-full h-48 rounded-2xl overflow-hidden shadow-md bg-gradient-to-br from-[#e6f3f5] to-white flex items-center justify-center border border-[#1b7b8e]/20">
+                            <img src="2.png" 
+                                alt="AI秒级分析" 
+                                class="w-full h-full object-cover"
+                                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-microchip text-5xl text-[#1b7b8e]/40\'></i>'">
+                            <i class="fas fa-microchip text-5xl text-[#1b7b8e]/40" style="display: none;"></i>
+                        </div>
+                        <div class="absolute -top-3 -left-3 w-10 h-10 bg-[#1b7b8e] text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">2</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">AI 秒级分析</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">便携设备+手机AI，3秒识别病变，准确率媲美专家</p>
+                </div>
+                
+                <!-- 箭头 (第二步到第三步) - 上移使其与图片中心对齐 -->
+                <div class="arrow-container flex items-center justify-center text-[#1b7b8e] text-3xl md:text-4xl font-bold self-start md:self-center mx-0 md:mx-2 mt-0 md:mt-[-20px]">
+                    <i class="fas fa-arrow-right hidden md:inline-block"></i>
+                    
+                </div>
+                
+                <!-- 第三步 -->
+                <div class="step-item flex-1 min-w-[240px] max-w-[320px] text-center relative">
+                    <div class="relative mb-5">
+                        <div class="w-full h-48 rounded-2xl overflow-hidden shadow-md bg-gradient-to-br from-[#e6f3f5] to-white flex items-center justify-center border border-[#1b7b8e]/20">
+                            <img src="3.png" 
+                                alt="当场获取报告" 
+                                class="w-full h-full object-cover"
+                                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-mobile-alt text-5xl text-[#1b7b8e]/40\'></i>'">
+                            <i class="fas fa-mobile-alt text-5xl text-[#1b7b8e]/40" style="display: none;"></i>
+                        </div>
+                        <div class="absolute -top-3 -left-3 w-10 h-10 bg-[#1b7b8e] text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">3</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">当场获取报告</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">正常/可疑/阳性，扫码即看，需转诊则一键对接县医院</p>
+                </div>
+            </div>
+            
+            <!-- 额外的装饰说明，与箭头风格呼应 -->
+            <div class="text-center mt-8">
+                <span class="bg-[#daf1e4] text-[#1f7044] px-4 py-2 rounded-full text-sm font-semibold inline-flex items-center gap-2">
+                    <i class="fas fa-wifi-slash"></i> 无网络也可筛查，数据自动缓存
+                </span>
+            </div>
+        </section>
+
+        <!-- 确保 FontAwesome 图标库可用（如果页面中未引入，请添加此 CDN） -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+        <style>
+            /* 增强响应式：小屏幕时步骤垂直排列，箭头自动旋转 */
+            @media (max-width: 768px) {
+                .step-item {
+                    margin-bottom: 0.5rem;
+                }
+                .arrow-container {
+                    margin: 0.25rem 0;
+                    transform: rotate(0deg);
+                }
+                /* 确保步骤容器在小屏时垂直方向有适当间距 */
+                .relative.flex-wrap {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .step-item {
+                    width: 100%;
+                    max-width: 320px;
+                }
+                .arrow-container i {
+                    font-size: 2rem;
+                }
+                /* 小屏幕时箭头位置调整 */
+                .arrow-container {
+                    margin-top: -10px !important;
+                    margin-bottom: -10px !important;
+                }
+            }
+            
+            /* 中等及以上屏幕，箭头为横向且有一定左右间距 */
+            @media (min-width: 769px) {
+                .arrow-container {
+                    margin-left: 0.5rem;
+                    margin-right: 0.5rem;
+                }
+                .step-item {
+                    transition: transform 0.2s ease;
+                }
+                .step-item:hover {
+                    transform: translateY(-5px);
+                }
+            }
+            
+            /* 可选：增加箭头动效 */
+            .arrow-container i {
+                transition: transform 0.2s ease, color 0.2s;
+            }
+            .step-item:hover ~ .arrow-container i,
+            .arrow-container:hover i {
+                transform: translateX(3px);
+                color: #0f5c6b;
+            }
+            /* 单独处理小屏幕悬停向下箭头 */
+            @media (max-width: 768px) {
+                .arrow-container:hover i {
+                    transform: translateY(3px);
+                }
+            }
+            
+            /* 保持原有风格，让图片容器更圆润 */
+            .rounded-2xl {
+                border-radius: 1rem;
+            }
+            .shadow-md {
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            }
+            .bg-gradient-to-br {
+                background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+            }
+            .from-\[#e6f3f5\] {
+                --tw-gradient-from: #e6f3f5;
+            }
+            .to-white {
+                --tw-gradient-to: white;
+            }
+        </style>
+
+        <!-- 核心优势 - 圆形轨道旋转模块（鼠标悬浮停止旋转） -->
+        <section id="advantages" class="relative py-12 px-4 my-8 gsap-fade overflow-hidden " style="min-height: 650px;">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">专为农村居民设计，您放心</h2>
+            <p class="text-gray-500 text-center mb-12 max-w-2xl mx-auto">四大核心优势，全方位守护您的眼健康</p>
+            
+            <!-- 3D 场景容器 -->
+            <div class="relative flex items-center justify-center">
+                <div class="relative" style="width: 600px; height: 600px;">
+                    <!-- 轨道环 - 装饰光环 -->
+                    <div class="absolute inset-0 rounded-full border-2 border-[#1b7b8e]/30 animate-spin-slow" 
+                        style="animation: spin 20s linear infinite; box-shadow: 0 0 20px rgba(27,123,142,0.2);"></div>
+                    <div class="absolute inset-0 rounded-full border border-[#5fa777]/20 animate-spin-reverse" 
+                        style="animation: spinReverse 25s linear infinite; width: 85%; height: 85%; top: 7.5%; left: 7.5%;"></div>
+                    <div class="absolute inset-0 rounded-full border border-[#1b7b8e]/10" 
+                        style="width: 70%; height: 70%; top: 15%; left: 15%;"></div>
+                    
+                    <!-- 粒子效果 - 动态光点 -->
+                    <div class="particles-container">
+                        <div class="particle particle-1"></div>
+                        <div class="particle particle-2"></div>
+                        <div class="particle particle-3"></div>
+                        <div class="particle particle-4"></div>
+                        <div class="particle particle-5"></div>
+                        <div class="particle particle-6"></div>
+                    </div>
+                    
+                    <!-- 中心发光球体 -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                        <div class="center-glow w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-[#1b7b8e] to-[#5fa777] rounded-full flex items-center justify-center shadow-2xl relative">
+                            <div class="absolute inset-0 rounded-full bg-white/30 animate-ping"></div>
+                            <div class="absolute inset-1 rounded-full bg-gradient-to-r from-[#1b7b8e] to-[#5fa777]"></div>
+                            <i class="fas fa-eye text-white text-3xl md:text-4xl relative z-10"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 轨道卡片容器 -->
+                    <div class="orbit-cards-container" id="orbitCardsContainer">
+                        <!-- 卡片1 - 花费极低 -->
+                        <div class="orbit-card" data-angle="0">
+                            <div class="card-content bg-white p-5 md:p-6 rounded-2xl shadow-xl border-2 border-[#1b7b8e]/20 hover:shadow-2xl transition-all duration-300 w-44 md:w-56 text-center cursor-pointer group hover:-translate-y-2">
+                                <div class="icon-wrapper w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#1b7b8e] to-[#5fa777] flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition">
+                                    <i class="fas fa-coins text-white text-2xl md:text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg md:text-xl font-bold mb-2 text-gray-800">花费极低</h3>
+                                <p class="text-xs md:text-sm text-gray-600 leading-relaxed">单次筛查仅需10~30元<br>医保报销70%<br>设备成本仅为传统1/10</p>
+                                <div class="mt-2 text-[#1b7b8e] text-xs font-semibold opacity-0 group-hover:opacity-100 transition">✨ 惠民利民 ✨</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 卡片2 - 操作极简 -->
+                        <div class="orbit-card" data-angle="90">
+                            <div class="card-content bg-white p-5 md:p-6 rounded-2xl shadow-xl border-2 border-[#1b7b8e]/20 hover:shadow-2xl transition-all duration-300 w-44 md:w-56 text-center cursor-pointer group hover:-translate-y-2">
+                                <div class="icon-wrapper w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#1b7b8e] to-[#5fa777] flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition">
+                                    <i class="fas fa-hand-pointer text-white text-2xl md:text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg md:text-xl font-bold mb-2 text-gray-800">操作极简</h3>
+                                <p class="text-xs md:text-sm text-gray-600 leading-relaxed">村医培训一周即可熟练<br>全程语音引导<br>坐好、睁眼，像拍照一样简单</p>
+                                <div class="mt-2 text-[#1b7b8e] text-xs font-semibold opacity-0 group-hover:opacity-100 transition">🎯 简单易学 🎯</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 卡片3 - 就在家门口 -->
+                        <div class="orbit-card" data-angle="180">
+                            <div class="card-content bg-white p-5 md:p-6 rounded-2xl shadow-xl border-2 border-[#1b7b8e]/20 hover:shadow-2xl transition-all duration-300 w-44 md:w-56 text-center cursor-pointer group hover:-translate-y-2">
+                                <div class="icon-wrapper w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#1b7b8e] to-[#5fa777] flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition">
+                                    <i class="fas fa-map-marker-alt text-white text-2xl md:text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg md:text-xl font-bold mb-2 text-gray-800">就在家门口</h3>
+                                <p class="text-xs md:text-sm text-gray-600 leading-relaxed">筛查下沉到村卫生室<br>流动筛查车进村<br>覆盖率从18%飙升至72%</p>
+                                <div class="mt-2 text-[#1b7b8e] text-xs font-semibold opacity-0 group-hover:opacity-100 transition">🏠 便捷就医 🏠</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 卡片4 - 建立眼健康档案 -->
+                        <div class="orbit-card" data-angle="270">
+                            <div class="card-content bg-white p-5 md:p-6 rounded-2xl shadow-xl border-2 border-[#1b7b8e]/20 hover:shadow-2xl transition-all duration-300 w-44 md:w-56 text-center cursor-pointer group hover:-translate-y-2">
+                                <div class="icon-wrapper w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#1b7b8e] to-[#5fa777] flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition">
+                                    <i class="fas fa-history text-white text-2xl md:text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg md:text-xl font-bold mb-2 text-gray-800">建立眼健康档案</h3>
+                                <p class="text-xs md:text-sm text-gray-600 leading-relaxed">每次结果存入"明眸云"<br>历次变化可对比<br>复诊时医生一目了然</p>
+                                <div class="mt-2 text-[#1b7b8e] text-xs font-semibold opacity-0 group-hover:opacity-100 transition">📊 终身档案 📊</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 提示文字 -->
+            <div class="text-center mt-8">
+                <div class="inline-flex items-center gap-2 bg-gray-100 px-5 py-2 rounded-full">
+                    <div class="w-2 h-2 bg-[#1b7b8e] rounded-full animate-pulse"></div>
+                    <span class="text-sm text-gray-600">✨ 四大优势围绕核心 | 鼠标悬浮卡片时自动停止旋转，始终为您服务 ✨</span>
+                </div>
+            </div>
+        </section>
+
+        <style>
+            /* 轨道动画 */
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            @keyframes spinReverse {
+                from { transform: rotate(360deg); }
+                to { transform: rotate(0deg); }
+            }
+            
+            /* 粒子效果 */
+            .particles-container {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+            
+            .particle {
+                position: absolute;
+                width: 3px;
+                height: 3px;
+                background: #1b7b8e;
+                border-radius: 50%;
+                opacity: 0;
+                animation: particleFloat 4s ease-in-out infinite;
+            }
+            
+            .particle-1 { top: 10%; left: 20%; animation-delay: 0s; }
+            .particle-2 { top: 80%; left: 15%; animation-delay: 0.5s; }
+            .particle-3 { top: 20%; right: 15%; animation-delay: 1s; }
+            .particle-4 { bottom: 15%; right: 20%; animation-delay: 1.5s; }
+            .particle-5 { top: 50%; left: 5%; animation-delay: 2s; }
+            .particle-6 { top: 50%; right: 5%; animation-delay: 2.5s; }
+            
+            @keyframes particleFloat {
+                0% {
+                    opacity: 0;
+                    transform: scale(0) translateY(0);
+                }
+                50% {
+                    opacity: 0.5;
+                    transform: scale(1) translateY(-20px);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(0) translateY(-40px);
+                }
+            }
+            
+            /* 轨道卡片容器 */
+            .orbit-cards-container {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .orbit-card {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transition: transform 0.05s linear;
+                will-change: transform;
+                pointer-events: auto;
+                cursor: pointer;
+            }
+            
+            /* 卡片内容样式 */
+            .card-content {
+                transition: all 0.3s ease;
+                backdrop-filter: blur(0px);
+            }
+            
+            .card-content:hover {
+                transform: translateY(-8px) !important;
+                box-shadow: 0 20px 35px -10px rgba(27, 123, 142, 0.3);
+                border-color: #1b7b8e;
+            }
+            
+            /* 图标悬停效果 */
+            .icon-wrapper {
+                transition: all 0.3s ease;
+            }
+            
+            .group:hover .icon-wrapper {
+                transform: scale(1.1);
+                box-shadow: 0 5px 15px rgba(27, 123, 142, 0.3);
+            }
+            
+            /* 旋转暂停时的效果 */
+            .orbit-card.paused .card-content {
+                animation: gentlePulse 1s ease-in-out;
+            }
+            
+            @keyframes gentlePulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+            }
+            
+            /* 响应式调整 */
+            @media (max-width: 768px) {
+                .orbit-card .card-content {
+                    width: 160px;
+                    padding: 1rem;
+                }
+                
+                .orbit-card .icon-wrapper {
+                    width: 48px;
+                    height: 48px;
+                }
+                
+                .orbit-card .icon-wrapper i {
+                    font-size: 1.25rem;
+                }
+                
+                .orbit-card h3 {
+                    font-size: 1rem;
+                }
+                
+                .orbit-card p {
+                    font-size: 0.7rem;
+                }
+                
+                div[style*="width: 600px"] {
+                    transform: scale(0.85);
+                }
+            }
+            
+            @media (max-width: 480px) {
+                div[style*="width: 600px"] {
+                    transform: scale(0.7);
+                }
+            }
+        </style>
+
+        <script>
+        // 圆形轨道旋转系统 - 鼠标悬浮停止旋转版本
+        (function() {
+            // 配置参数
+            let currentAngle = 0;
+            const rotationSpeed = 0.8; // 固定旋转速度（度/帧）
+            let animationId = null;
+            let isRotating = true; // 旋转状态
+            let hoverCard = null; // 当前悬浮的卡片
+            
+            // 轨道半径 (根据屏幕大小调整)
+            const getOrbitRadius = () => {
+                if (window.innerWidth <= 480) return 140;
+                if (window.innerWidth <= 768) return 170;
+                return 220;
+            };
+            
+            let orbitRadius = getOrbitRadius();
+            
+            // 获取所有卡片和对应的角度
+            const cards = document.querySelectorAll('.orbit-card');
+            const cardAngles = [0, 90, 180, 270];
+            
+            // 更新卡片位置
+            function updateCardPositions() {
+                const radius = getOrbitRadius();
+                const angleRad = (currentAngle * Math.PI) / 180;
+                
+                cards.forEach((card, index) => {
+                    // 计算卡片在轨道上的位置
+                    const cardAngle = (cardAngles[index] * Math.PI / 180) + angleRad;
+                    const x = Math.cos(cardAngle) * radius;
+                    const y = Math.sin(cardAngle) * radius;
+                    
+                    // 只移动位置，不旋转卡片内容
+                    card.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                    
+                    // 根据位置微调透明度，增加立体感
+                    const distanceFromCenter = Math.sqrt(x * x + y * y);
+                    const maxDistance = radius;
+                    const opacity = 0.85 + (distanceFromCenter / maxDistance) * 0.15;
+                    card.style.opacity = opacity;
+                });
+            }
+            
+            // 动画循环
+            function animate() {
+                if (isRotating) {
+                    currentAngle = (currentAngle + rotationSpeed) % 360;
+                    updateCardPositions();
+                }
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            // 停止旋转
+            function stopRotation() {
+                if (isRotating) {
+                    isRotating = false;
+                    // 添加暂停视觉效果
+                    if (hoverCard) {
+                        hoverCard.classList.add('paused');
+                        setTimeout(() => {
+                            if (hoverCard) hoverCard.classList.remove('paused');
+                        }, 300);
+                    }
+                }
+            }
+            
+            // 恢复旋转
+            function resumeRotation() {
+                if (!isRotating && !hoverCard) {
+                    isRotating = true;
+                }
+            }
+            
+            // 鼠标悬浮事件
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    hoverCard = card;
+                    stopRotation();
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    hoverCard = null;
+                    resumeRotation();
+                });
+            });
+            
+            // 整个轨道容器悬浮时也停止旋转（可选）
+            const orbitContainer = document.getElementById('orbitCardsContainer');
+            if (orbitContainer) {
+                orbitContainer.addEventListener('mouseenter', () => {
+                    if (!hoverCard) {
+                        stopRotation();
+                    }
+                });
+                
+                orbitContainer.addEventListener('mouseleave', () => {
+                    if (!hoverCard) {
+                        resumeRotation();
+                    }
+                });
+            }
+            
+            // 开始动画
+            function startAnimation() {
+                if (animationId) cancelAnimationFrame(animationId);
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            // 窗口大小改变时重新计算位置
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    orbitRadius = getOrbitRadius();
+                    updateCardPositions();
+                }, 200);
+            });
+            
+        
+            
+            // 初始化位置并开始动画
+            updateCardPositions();
+            startAnimation();
+            
+            // 页面可见性变化时处理（节省资源）
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    wasRotating = isRotating;
+                    isRotating = false;
+                } else {
+                    if (wasRotating && !hoverCard) {
+                        isRotating = true;
+                    }
+                }
+            });
+            
+            console.log('圆形轨道旋转模块已启动 - 鼠标悬浮卡片时自动停止旋转');
+        })();
+        </script>
+
+        <!-- 试点成果 -->
+        <section id="results" class="gsap-fade">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">真实数据 · 看得见的成效</h2>
+            <div class="bg-white rounded-2xl p-8 shadow-sm flex flex-wrap items-center gap-8">
+                <div class="flex-2">
+                    <h3 class="text-2xl font-bold mb-4">河北3乡镇 试点结果</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="bg-[#eef3f8] py-3 px-5 rounded-full min-w-[140px]"><span class="text-4xl font-bold text-[#1b7b8e]">18%→72%</span><br>筛查覆盖率</div>
+                        <div class="bg-[#eef3f8] py-3 px-5 rounded-full min-w-[140px]"><span class="text-4xl font-bold text-[#1b7b8e]">3倍</span><br>转诊效率提升</div>
+                        <div class="bg-[#eef3f8] py-3 px-5 rounded-full min-w-[140px]"><span class="text-4xl font-bold text-[#1b7b8e]">89%/82%</span><br>医/患满意度</div>
+                    </div>
+                </div>
+                <div class="flex-1 bg-[#e5f3e9] rounded-2xl p-5"><i class="fas fa-file-medical-alt text-4xl text-[#1b7b8e]"></i><p class="mt-3"><strong>晚期致盲风险预计降低40%以上</strong>，减少长期照护负担，节约家庭与社会成本。</p></div>
+            </div>
+            <p class="mt-5 text-gray-600 text-sm">*试点覆盖12个行政村，糖尿病患者主动筛查率大幅跃升，模式已在多县域复制推广。</p>
+        </section>
+
+        <!-- 医保政策 -->
+        <section class="bg-white rounded-[40px] p-8 shadow-sm my-8 gsap-fade">
+            <div class="flex flex-wrap items-center gap-5">
+                <div class="flex-1 min-w-[260px]"><span class="bg-[#daf1e4] text-[#1f7044] px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-hand-holding-heart"></i> 政府支持</span><h2 class="text-3xl font-bold my-4">医保报销+政府补贴</h2><p class="text-gray-600">已纳入多个县域门诊统筹，个人仅承担30%以内，低保、高龄老人免费筛查。政策东风助力“健康中国2030”。</p></div>
+                <div class="flex-none flex gap-3"><i class="fas fa-shield-alt text-5xl text-[#1b7b8e]"></i><i class="fas fa-id-card text-5xl text-[#5fa777]"></i></div>
+            </div>
+        </section>
+
+        <!-- 团队介绍 -->
+        <section class="text-center my-8 gsap-fade">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">跨学科团队 · 为您的眼睛护航</h2>
+            <div class="flex flex-wrap gap-6 justify-center">
+                <div class="bg-white rounded-2xl p-5 shadow-sm flex-1 min-w-[160px]"><div class="w-20 h-20 bg-[#d4eae5] rounded-full flex items-center justify-center mx-auto mb-3 text-3xl text-[#0e5f6f]"><i class="fas fa-robot"></i></div><h4 class="font-bold">AI算法组</h4><p class="text-sm text-gray-600">模型轻量化＜48MB</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm flex-1 min-w-[160px]"><div class="w-20 h-20 bg-[#d4eae5] rounded-full flex items-center justify-center mx-auto mb-3 text-3xl text-[#0e5f6f]"><i class="fas fa-chart-line"></i></div><h4 class="font-bold">基层调研</h4><p class="text-sm text-gray-600">深入12村实地访谈</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm flex-1 min-w-[160px]"><div class="w-20 h-20 bg-[#d4eae5] rounded-full flex items-center justify-center mx-auto mb-3 text-3xl text-[#0e5f6f]"><i class="fas fa-microscope"></i></div><h4 class="font-bold">医学指导</h4><p class="text-sm text-gray-600">三甲医院眼科专家</p></div>
+            </div>
+            <p class="mt-5 text-gray-600">与县域医共体、卫健委深度合作，已申请二类医疗器械注册。</p>
+        </section>
+
+        
+      
+    </div>
+
+    <!-- ========= 每日健康打卡模块 ========= -->
+    <section id="checkin" class="max-w-[1300px] mx-auto px-5 py-8 mt-8 mb-12 gsap-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-calendar-check text-[#1b7b8e] mr-2"></i>每日健康打卡
+            </h2>
+            <p class="text-gray-500 max-w-2xl mx-auto">坚持记录血糖和血压，守护眼健康从日常开始</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-6 gsap-fade">
+            <!-- 左侧：打卡日历 -->
+            <div class="md:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-calendar-alt text-[#1b7b8e] mr-2"></i>本月打卡记录
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-full px-4 py-2 text-white font-bold flex items-center gap-2">
+                            <i class="fas fa-fire"></i>
+                            <span id="streakDays">0</span>
+                            <span class="text-sm">天连续打卡</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 星期标题 -->
+                <div class="grid grid-cols-7 gap-2 mb-4 gsap-fade">
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">一</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">二</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">三</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">四</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">五</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">六</div>
+                    <div class="text-center text-sm font-semibold text-gray-500 py-2">日</div>
+                </div>
+                
+                <!-- 日历网格 -->
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2 mb-6 gsap-fade"></div>
+                
+                <!-- 图例说明 -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex items-center gap-4 text-sm text-gray-600">
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gradient-to-r from-[#1b7b8e] to-[#5fa777]"></div><span>已打卡</span></div>
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gray-200 border border-gray-300"></div><span>未打卡</span></div>
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-200 border border-yellow-400"></div><span>今日</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：今日打卡表单 -->
+            <div class="bg-gradient-to-br from-[#f0f9f7] to-white rounded-2xl shadow-lg p-6 gsap-fade" >
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-clipboard-list text-[#1b7b8e] mr-2"></i>今日健康记录
+                </h3>
+                <div class="text-sm text-gray-500 mb-4" id="todayDate"></div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            <i class="fas fa-tint text-red-500 mr-1"></i>血糖值 (mmol/L)
+                        </label>
+                        <input type="number" id="bloodSugar" step="0.1" placeholder="例如：5.6" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition">
+                        <p class="text-xs text-gray-400 mt-1">空腹正常范围：3.9-6.1 mmol/L</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            <i class="fas fa-heartbeat text-blue-500 mr-1"></i>血压值 (mmHg)
+                        </label>
+                        
+                            <input type="number" id="bpSystolic" placeholder="收缩压" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition">
+                            <input type="number" id="bpDiastolic" placeholder="舒张压" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition">
+                        
+                        <p class="text-xs text-gray-400 mt-1">理想血压：&lt;120/80 mmHg</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            <i class="fas fa-sticky-note text-green-500 mr-1"></i>健康备注
+                        </label>
+                        <textarea id="healthNote" rows="2" placeholder="今天感觉如何？是否有不适？" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1b7b8e] focus:outline-none transition resize-none"></textarea>
+                    </div>
+                    
+                    <button id="checkinBtn" class="w-full bg-gradient-to-r from-[#1b7b8e] to-[#5fa777] text-white py-3 rounded-xl font-bold hover:shadow-lg transition transform hover:-translate-y-0.5">
+                        <i class="fas fa-check-circle mr-2"></i>今日打卡
+                    </button>
+                </div>
+                
+                <div id="checkinMessage" class="mt-4 text-center text-sm hidden"></div>
+            </div>
+        </div>
+        
+        <!-- 健康小贴士 -->
+        <div class="mt-6 bg-[#eef3f8] rounded-xl p-4 flex items-center gap-3">
+            <i class="fas fa-lightbulb text-yellow-500 text-2xl"></i>
+            <div>
+                <span class="font-semibold text-gray-700">健康小贴士：</span>
+                <span class="text-gray-600 text-sm" id="healthTip">定期监测血糖血压，控制好「三高」，能有效降低糖尿病视网膜病变风险！</span>
+            </div>
+        </div>
+    </section>
+    <div class="max-w-[1300px] mx-auto px-5 ">
+          <section id="faq" class="gsap-fade">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">您最关心的问题</h2>
+            <div class="space-y-2">
+                <div class="bg-white rounded-xl p-5 shadow-sm cursor-pointer border border-transparent hover:border-[#1b7b8e]/20 transition faq-item"><div class="flex justify-between items-center"><span><i class="fas fa-question-circle text-[#1b7b8e] mr-2"></i>需要散瞳吗？会不会难受？</span><i class="fas fa-chevron-down text-gray-500 transition"></i></div><div class="mt-2 text-gray-600 hidden faq-answer">完全不需要！采用非散瞳眼底相机，无接触、无痛，就像测视力一样轻松，老人、高血压人群都适用。</div></div>
+                <div class="bg-white rounded-xl p-5 shadow-sm cursor-pointer border border-transparent hover:border-[#1b7b8e]/20 transition faq-item"><div class="flex justify-between items-center"><span><i class="fas fa-question-circle text-[#1b7b8e] mr-2"></i>筛查报告准确吗？能代替医生吗？</span><i class="fas fa-chevron-down text-gray-500 transition"></i></div><div class="mt-2 text-gray-600 hidden faq-answer">AI辅助诊断准确率86.7%，敏感度89.2%。所有阳性结果必须经乡镇/县级医生复核，双重把关。AI只做辅助，最终诊断由医生确认。</div></div>
+                <div class="bg-white rounded-xl p-5 shadow-sm cursor-pointer border border-transparent hover:border-[#1b7b8e]/20 transition faq-item"><div class="flex justify-between items-center"><span><i class="fas fa-question-circle text-[#1b7b8e] mr-2"></i>查出有问题怎么办？</span><i class="fas fa-chevron-down text-gray-500 transition"></i></div><div class="mt-2 text-gray-600 hidden faq-answer">平台会自动转诊至县级医院眼科绿色通道，优先安排就诊。专人随访提醒复查，全程跟踪，不让您多跑一趟。</div></div>
+                <div class="bg-white rounded-xl p-5 shadow-sm cursor-pointer border border-transparent hover:border-[#1b7b8e]/20 transition faq-item"><div class="flex justify-between items-center"><span><i class="fas fa-question-circle text-[#1b7b8e] mr-2"></i>一次筛查要多少钱？</span><i class="fas fa-chevron-down text-gray-500 transition"></i></div><div class="mt-2 text-gray-600 hidden faq-answer">各地略有差异，一般个人自付10~30元/次，医保报销70%左右。低保、特困、高龄老人可享受免费筛查。</div></div>
+            </div>
+        </section>
+    </div>
+<style>
+/* 日历方块样式 - 与原页面一致 */
+.calendar-day {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.calendar-day.checked {
+    background: linear-gradient(135deg, #1b7b8e, #5fa777);
+    color: white;
+    transform: scale(1.05);
+}
+.calendar-day.bg-gray-100 {
+    background-color: #f3f4f6;
+}
+.calendar-day.ring-2 {
+    ring-width: 2px;
+}
+.ring-yellow-400 {
+    --tw-ring-color: #fbbf24;
+}
+.bg-yellow-100 {
+    background-color: #fef9c3;
+}
+</style>
+
+<script>
+// 打卡模块脚本
+(function() {
+    let checkinData = JSON.parse(localStorage.getItem('checkinRecords')) || {};
+    let streakDays = 0;
+    
+    function getTodayStr() {
+        const today = new Date();
+        return today.toISOString().slice(0,10);
+    }
+    
+    function calculateStreak() {
+        let streak = 0;
+        let currentDate = new Date();
+        while(true) {
+            const dateStr = currentDate.toISOString().slice(0,10);
+            if(checkinData[dateStr]) {
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        return streak;
+    }
+    
+    function renderCalendar() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startWeekday = firstDay.getDay();
+        let adjustedStart = startWeekday === 0 ? 6 : startWeekday - 1;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const calendarGrid = document.getElementById('calendarGrid');
+        if(!calendarGrid) return;
+        calendarGrid.innerHTML = '';
+        
+        // 填充空白
+        for(let i = 0; i < adjustedStart; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'text-center py-2 text-gray-300';
+            emptyDiv.innerHTML = '—';
+            calendarGrid.appendChild(emptyDiv);
+        }
+        
+        // 填充日期
+        for(let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isChecked = checkinData[dateStr];
+            const isToday = dateStr === getTodayStr();
+            const dayDiv = document.createElement('div');
+            dayDiv.className = `text-center py-2 rounded-full cursor-pointer transition calendar-day ${isChecked ? 'checked' : 'bg-gray-100'} ${isToday ? 'ring-2 ring-yellow-400 bg-yellow-100' : ''}`;
+            dayDiv.innerHTML = `<span class="text-sm font-medium">${d}</span>`;
+            if(isChecked) dayDiv.innerHTML += '<i class="fas fa-check text-white text-xs ml-1"></i>';
+            dayDiv.onclick = () => {
+                if(isChecked) {
+                    alert(`📅 ${dateStr}\n血糖：${checkinData[dateStr].sugar || '未记录'} mmol/L\n血压：${checkinData[dateStr].bpSystolic || '?'}/${checkinData[dateStr].bpDiastolic || '?'}\n备注：${checkinData[dateStr].note || '无'}`);
+                }
+            };
+            calendarGrid.appendChild(dayDiv);
+        }
+        
+        streakDays = calculateStreak();
+        const streakSpan = document.getElementById('streakDays');
+        if(streakSpan) streakSpan.innerText = streakDays;
+    }
+    
+    function checkinToday() {
+        const todayStr = getTodayStr();
+        if(checkinData[todayStr]) {
+            alert('今天已经打过卡了！明天再来吧~');
+            return;
+        }
+        
+        const sugar = document.getElementById('bloodSugar').value;
+        const bpSystolic = document.getElementById('bpSystolic').value;
+        const bpDiastolic = document.getElementById('bpDiastolic').value;
+        const note = document.getElementById('healthNote').value;
+        
+        if(!sugar && !bpSystolic && !bpDiastolic) {
+            alert('请至少填写血糖或血压值之一');
+            return;
+        }
+        
+        checkinData[todayStr] = {
+            sugar: sugar || null,
+            bpSystolic: bpSystolic || null,
+            bpDiastolic: bpDiastolic || null,
+            note: note || '',
+            timestamp: Date.now()
+        };
+        localStorage.setItem('checkinRecords', JSON.stringify(checkinData));
+        
+        const msgDiv = document.getElementById('checkinMessage');
+        msgDiv.innerHTML = '<div class="bg-green-100 text-green-700 p-2 rounded-lg"><i class="fas fa-check-circle"></i> 打卡成功！连续打卡 ' + (streakDays+1) + ' 天，继续加油！</div>';
+        msgDiv.classList.remove('hidden');
+        setTimeout(() => msgDiv.classList.add('hidden'), 3000);
+        
+        document.getElementById('bloodSugar').value = '';
+        document.getElementById('bpSystolic').value = '';
+        document.getElementById('bpDiastolic').value = '';
+        document.getElementById('healthNote').value = '';
+        
+        renderCalendar();
+        
+        const tipDiv = document.getElementById('healthTip');
+        if(streakDays+1 >= 7) tipDiv.innerHTML = '🎉 恭喜！你已经连续打卡7天！良好的监测习惯是守护眼健康的第一步！';
+        else if(sugar && sugar > 7) tipDiv.innerHTML = '⚠️ 血糖偏高，请注意饮食控制，适当运动，定期复查眼底！';
+        else tipDiv.innerHTML = '✅ 坚持记录，早发现早干预，糖尿病眼病可防可控！';
+    }
+    
+    function setTodayDate() {
+        const todaySpan = document.getElementById('todayDate');
+        if(todaySpan) {
+            const today = new Date();
+            todaySpan.innerHTML = `<i class="far fa-calendar"></i> ${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+        }
+    }
+    
+    setTodayDate();
+    renderCalendar();
+    const checkinBtn = document.getElementById('checkinBtn');
+    if(checkinBtn) checkinBtn.addEventListener('click', checkinToday);
+})();
+</script>
+    
+    <!-- Footer -->
+    <footer class="bg-[#16232e] text-[#b2c9d6] py-10 rounded-t-[36px] mt-10">
+        <div class="max-w-[1300px] mx-auto px-5 flex flex-wrap justify-between gap-8">
+            <div><div class="flex items-center gap-2 text-white text-2xl font-bold"><i class="fas fa-eye text-[#5fa777]"></i>智慧明眸</div><p class="my-4">赋能基层医疗，守护乡村眼健康<br>AI眼底筛查 · 便民 · 惠民 · 可靠</p><p>© 2025 智慧明眸团队 · 试点数据真实可溯</p></div>
+            <div><p class="font-bold text-white">合作机构</p><p class="mt-2">县域医共体 · 卫健委试点 · 健康中国项目</p><p class="mt-3"><i class="fab fa-weixin"></i> 官方公众号 &nbsp; <i class="fab fa-weibo"></i> 智慧明眸官微</p></div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部 -->
+    <div class="back-top" id="backTop"><i class="fas fa-chevron-up"></i></div>
+
+    <script>
+        (function() {
+            // // 弹窗逻辑
+            // const modal = document.getElementById('identityModal');
+            // const nicknameInput = document.getElementById('nicknameInput');
+            // const rolePatient = document.getElementById('rolePatient');
+            // const roleDoctor = document.getElementById('roleDoctor');
+            // const confirmBtn = document.getElementById('confirmBtn');
+            // const identityDisplay = document.getElementById('identityDisplay');
+            // const identityTrigger = document.getElementById('identityTrigger');
+
+            // let selectedRole = 'patient';
+            // let nickname = '';
+
+            // // 角色选择样式切换
+            // rolePatient.addEventListener('click', () => {
+            //     rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //     rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
+            //     roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //     roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
+            //     selectedRole = 'patient';
+            //     confirmBtn.innerText = '进入患者页面';
+            // });
+            // roleDoctor.addEventListener('click', () => {
+            //     roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //     roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
+            //     rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //     rolePatient.classList.add('bg-gray-100', 'text-gray-800');
+            //     selectedRole = 'doctor';
+            //     confirmBtn.innerText = '进入医生页面';
+            // });
+
+            // function openModal() {
+            //     modal.classList.remove('invisible', 'opacity-0');
+            //     modal.classList.add('visible', 'opacity-100');
+            //     nicknameInput.value = nickname;
+            //     if (selectedRole === 'patient') {
+            //         rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //         rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
+            //         roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //         roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
+            //     } else {
+            //         roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //         roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
+            //         rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+            //         rolePatient.classList.add('bg-gray-100', 'text-gray-800');
+            //     }
+            //     confirmBtn.innerText = selectedRole === 'patient' ? '进入患者页面' : '进入医生页面';
+            // }
+            // function closeModal() {
+            //     modal.classList.add('invisible', 'opacity-0');
+            //     modal.classList.remove('visible', 'opacity-100');
+            // }
+            // function updateIdentityDisplay() {
+            //     if (nickname && selectedRole) {
+            //         let roleText = selectedRole === 'patient' ? '患者' : '医生';
+            //         identityDisplay.innerText = nickname + ' · ' + roleText;
+            //     } else {
+            //         identityDisplay.innerText = '身份';
+            //     }
+            // }
+            // confirmBtn.addEventListener('click', () => {
+            //     const rawNickname = nicknameInput.value.trim();
+            //     if (!rawNickname) {
+            //         alert('请填写昵称');
+            //         return;
+            //     }
+            //     nickname = rawNickname;
+            //     updateIdentityDisplay();
+            //     closeModal();
+            //     if (selectedRole === 'doctor') {
+            //         alert('您已选择医生身份，即将跳转至医生端页面（演示跳转）');
+            //         window.location.href = 'order.html';  // 实际跳转
+            //     }
+            // });
+            // identityTrigger.addEventListener('click', openModal);
+            // window.addEventListener('load', () => {
+            //     openModal();
+            // });
+            // modal.addEventListener('click', (e) => {
+            //     if (e.target === modal) {
+            //         if (nickname) {
+            //             closeModal();
+            //         } else {
+            //             alert('请先填写昵称和身份');
+            //         }
+            //     }
+            // });
+
+            // FAQ 折叠
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const ans = item.querySelector('.faq-answer');
+                    const arrow = item.querySelector('.fa-chevron-down');
+                    const isOpen = ans.style.display === 'block';
+                    document.querySelectorAll('.faq-answer').forEach(i => i.style.display = 'none');
+                    document.querySelectorAll('.fa-chevron-down').forEach(i => i.style.transform = 'rotate(0deg)');
+                    if (!isOpen) {
+                        ans.style.display = 'block';
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            // 回到顶部
+            const backTop = document.getElementById('backTop');
+            window.addEventListener('scroll', () => {
+                backTop.classList.toggle('show', window.scrollY > 300);
+            });
+            backTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // ========= 联系我们弹窗逻辑 =========
+            const contactModal = document.getElementById('contactModal');
+            const contactDoctorBtn = document.getElementById('contactDoctorBtn');
+            const closeContactModalBtn = document.getElementById('closeContactModalBtn');
+            const cancelContactBtn = document.getElementById('cancelContactBtn');
+            const contactForm = document.getElementById('contactForm');
+            
+            // 打开弹窗
+            function openContactModal() {
+                contactModal.classList.remove('invisible', 'opacity-0');
+                contactModal.classList.add('visible', 'opacity-100');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // 关闭弹窗
+            function closeContactModal() {
+                contactModal.classList.add('invisible', 'opacity-0');
+                contactModal.classList.remove('visible', 'opacity-100');
+                document.body.style.overflow = '';
+                // 清空表单
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactPhone').value = '';
+                document.getElementById('contactMessage').value = '';
+            }
+            
+            // 点击咨询村医按钮
+            contactDoctorBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openContactModal();
+            });
+            
+            // 点击关闭按钮
+            closeContactModalBtn.addEventListener('click', closeContactModal);
+            cancelContactBtn.addEventListener('click', closeContactModal);
+            
+            // 点击背景关闭
+            contactModal.addEventListener('click', (e) => {
+                if (e.target === contactModal) {
+                    closeContactModal();
+                }
+            });
+            
+            // 表单提交
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('contactName').value.trim();
+                const phone = document.getElementById('contactPhone').value.trim();
+                const message = document.getElementById('contactMessage').value.trim();
+                
+                // 验证必填项
+                if (!name) {
+                    alert('请填写姓名');
+                    document.getElementById('contactName').focus();
+                    return;
+                }
+                
+                if (!phone) {
+                    alert('请填写电话号码');
+                    document.getElementById('contactPhone').focus();
+                    return;
+                }
+                
+                // 简单手机号验证（11位数字，以1开头）
+                const phoneRegex = /^1[3-9]\d{9}$/;
+                if (!phoneRegex.test(phone)) {
+                    alert('请输入正确的11位手机号码');
+                    document.getElementById('contactPhone').focus();
+                    return;
+                }
+                
+                if (!message) {
+                    alert('请填写问题描述');
+                    document.getElementById('contactMessage').focus();
+                    return;
+                }
+                
+                // 模拟提交成功
+                alert(`提交成功！\n\n姓名：${name}\n电话：${phone}\n问题：${message}\n\n我们的村医会尽快与您联系，请保持电话畅通。`);
+                
+                // 关闭弹窗
+                closeContactModal();
+            });
+
+            // ========= GSAP 滑动渐变 (核心功能) ==========
+            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                gsap.registerPlugin(ScrollTrigger);
+                
+                // 选择所有需要动画的元素
+                const fadeElements = document.querySelectorAll('.gsap-fade, .step, .card, .team-member, .faq-item, section > h2, .pilot-card, .stats-banner');
+                
+                // 设置初始状态
+                gsap.set(fadeElements, { 
+                    opacity: 0, 
+                    y: 30 
+                });
+                
+                // 为每个元素创建滚动动画
+                fadeElements.forEach(el => {
+                    gsap.to(el, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: el,
+                            start: 'top 85%',
+                            end: 'bottom 20%',
+                            toggleActions: 'play none none reverse',
+                            once: false
+                        }
+                    });
+                });
+            }
+        })();
+        // ========= 滚动定位功能 =========
+        (function() {
+            // 获取所有导航链接
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            const sections = [];
+            
+            // 获取所有需要定位的section
+            const sectionIds = ['how', 'advantages', 'results', 'faq'];
+            
+            // 获取各个section元素
+            sectionIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    sections.push({
+                        id: id,
+                        element: element,
+                        top: 0,
+                        bottom: 0
+                    });
+                }
+            });
+            
+            // 更新每个section的位置信息
+            function updateSectionPositions() {
+                sections.forEach(section => {
+                    const rect = section.element.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    section.top = rect.top + scrollTop - 100; // 减去偏移量（导航栏高度+间距）
+                    section.bottom = rect.bottom + scrollTop - 100;
+                });
+            }
+            
+            // 平滑滚动到目标位置
+            function smoothScrollTo(targetElement, offset = 80) {
+                if (!targetElement) return;
+                
+                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // 为导航链接添加点击事件
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const targetId = link.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        // 移除所有链接的active类
+                        navLinks.forEach(l => l.classList.remove('active-nav'));
+                        // 为当前链接添加active类
+                        link.classList.add('active-nav');
+                        
+                        // 平滑滚动
+                        smoothScrollTo(targetElement, 80);
+                        
+                        // 更新URL哈希（可选）
+                        history.pushState(null, null, `#${targetId}`);
+                    }
+                });
+            });
+            
+            // 滚动时高亮当前所在区域的导航菜单
+            function highlightCurrentSection() {
+                const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+                
+                let currentSection = null;
+                
+                // 找到当前所在的section
+                for (let i = sections.length - 1; i >= 0; i--) {
+                    const section = sections[i];
+                    if (scrollPosition + 150 >= section.top) {
+                        currentSection = section;
+                        break;
+                    }
+                }
+                
+                // 高亮对应的导航链接
+                if (currentSection) {
+                    navLinks.forEach(link => {
+                        const href = link.getAttribute('href').substring(1);
+                        if (href === currentSection.id) {
+                            link.classList.add('active-nav');
+                        } else {
+                            link.classList.remove('active-nav');
+                        }
+                    });
+                }
+            }
+            
+            // 监听滚动事件
+            window.addEventListener('scroll', () => {
+                highlightCurrentSection();
+                updateSectionPositions();
+            });
+            
+            // 监听窗口大小改变，重新计算位置
+            window.addEventListener('resize', () => {
+                updateSectionPositions();
+                highlightCurrentSection();
+            });
+            
+            // 页面加载完成后初始化
+            window.addEventListener('load', () => {
+                updateSectionPositions();
+                
+                // 如果URL中有哈希值，滚动到对应位置
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const targetElement = document.getElementById(hash);
+                    if (targetElement) {
+                        setTimeout(() => {
+                            smoothScrollTo(targetElement, 80);
+                        }, 100);
+                    }
+                } else {
+                    highlightCurrentSection();
+                }
+            });
+            
+            // 为返回顶部按钮添加功能（已有的返回顶部按钮，确保平滑滚动）
+            const backTop = document.getElementById('backTop');
+            if (backTop) {
+                backTop.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
