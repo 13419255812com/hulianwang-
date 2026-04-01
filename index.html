@@ -1236,92 +1236,92 @@
 
     <script>
         (function() {
-            // // 弹窗逻辑
-            // const modal = document.getElementById('identityModal');
-            // const nicknameInput = document.getElementById('nicknameInput');
-            // const rolePatient = document.getElementById('rolePatient');
-            // const roleDoctor = document.getElementById('roleDoctor');
-            // const confirmBtn = document.getElementById('confirmBtn');
-            // const identityDisplay = document.getElementById('identityDisplay');
-            // const identityTrigger = document.getElementById('identityTrigger');
+            // 弹窗逻辑
+            const modal = document.getElementById('identityModal');
+            const nicknameInput = document.getElementById('nicknameInput');
+            const rolePatient = document.getElementById('rolePatient');
+            const roleDoctor = document.getElementById('roleDoctor');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const identityDisplay = document.getElementById('identityDisplay');
+            const identityTrigger = document.getElementById('identityTrigger');
 
-            // let selectedRole = 'patient';
-            // let nickname = '';
+            let selectedRole = 'patient';
+            let nickname = '';
 
-            // // 角色选择样式切换
-            // rolePatient.addEventListener('click', () => {
-            //     rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //     rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
-            //     roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //     roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
-            //     selectedRole = 'patient';
-            //     confirmBtn.innerText = '进入患者页面';
-            // });
-            // roleDoctor.addEventListener('click', () => {
-            //     roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //     roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
-            //     rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //     rolePatient.classList.add('bg-gray-100', 'text-gray-800');
-            //     selectedRole = 'doctor';
-            //     confirmBtn.innerText = '进入医生页面';
-            // });
+            // 角色选择样式切换
+            rolePatient.addEventListener('click', () => {
+                rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
+                roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
+                selectedRole = 'patient';
+                confirmBtn.innerText = '进入患者页面';
+            });
+            roleDoctor.addEventListener('click', () => {
+                roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
+                rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                rolePatient.classList.add('bg-gray-100', 'text-gray-800');
+                selectedRole = 'doctor';
+                confirmBtn.innerText = '进入医生页面';
+            });
 
-            // function openModal() {
-            //     modal.classList.remove('invisible', 'opacity-0');
-            //     modal.classList.add('visible', 'opacity-100');
-            //     nicknameInput.value = nickname;
-            //     if (selectedRole === 'patient') {
-            //         rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //         rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
-            //         roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //         roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
-            //     } else {
-            //         roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //         roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
-            //         rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
-            //         rolePatient.classList.add('bg-gray-100', 'text-gray-800');
-            //     }
-            //     confirmBtn.innerText = selectedRole === 'patient' ? '进入患者页面' : '进入医生页面';
-            // }
-            // function closeModal() {
-            //     modal.classList.add('invisible', 'opacity-0');
-            //     modal.classList.remove('visible', 'opacity-100');
-            // }
-            // function updateIdentityDisplay() {
-            //     if (nickname && selectedRole) {
-            //         let roleText = selectedRole === 'patient' ? '患者' : '医生';
-            //         identityDisplay.innerText = nickname + ' · ' + roleText;
-            //     } else {
-            //         identityDisplay.innerText = '身份';
-            //     }
-            // }
-            // confirmBtn.addEventListener('click', () => {
-            //     const rawNickname = nicknameInput.value.trim();
-            //     if (!rawNickname) {
-            //         alert('请填写昵称');
-            //         return;
-            //     }
-            //     nickname = rawNickname;
-            //     updateIdentityDisplay();
-            //     closeModal();
-            //     if (selectedRole === 'doctor') {
-            //         alert('您已选择医生身份，即将跳转至医生端页面（演示跳转）');
-            //         window.location.href = 'order.html';  // 实际跳转
-            //     }
-            // });
-            // identityTrigger.addEventListener('click', openModal);
-            // window.addEventListener('load', () => {
-            //     openModal();
-            // });
-            // modal.addEventListener('click', (e) => {
-            //     if (e.target === modal) {
-            //         if (nickname) {
-            //             closeModal();
-            //         } else {
-            //             alert('请先填写昵称和身份');
-            //         }
-            //     }
-            // });
+            function openModal() {
+                modal.classList.remove('invisible', 'opacity-0');
+                modal.classList.add('visible', 'opacity-100');
+                nicknameInput.value = nickname;
+                if (selectedRole === 'patient') {
+                    rolePatient.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                    rolePatient.classList.remove('bg-gray-100', 'text-gray-800');
+                    roleDoctor.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                    roleDoctor.classList.add('bg-gray-100', 'text-gray-800');
+                } else {
+                    roleDoctor.classList.add('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                    roleDoctor.classList.remove('bg-gray-100', 'text-gray-800');
+                    rolePatient.classList.remove('bg-[#1b7b8e]', 'text-white', 'border-[#0e5f6f]');
+                    rolePatient.classList.add('bg-gray-100', 'text-gray-800');
+                }
+                confirmBtn.innerText = selectedRole === 'patient' ? '进入患者页面' : '进入医生页面';
+            }
+            function closeModal() {
+                modal.classList.add('invisible', 'opacity-0');
+                modal.classList.remove('visible', 'opacity-100');
+            }
+            function updateIdentityDisplay() {
+                if (nickname && selectedRole) {
+                    let roleText = selectedRole === 'patient' ? '患者' : '医生';
+                    identityDisplay.innerText = nickname + ' · ' + roleText;
+                } else {
+                    identityDisplay.innerText = '身份';
+                }
+            }
+            confirmBtn.addEventListener('click', () => {
+                const rawNickname = nicknameInput.value.trim();
+                if (!rawNickname) {
+                    alert('请填写昵称');
+                    return;
+                }
+                nickname = rawNickname;
+                updateIdentityDisplay();
+                closeModal();
+                if (selectedRole === 'doctor') {
+                    alert('您已选择医生身份，即将跳转至医生端页面（演示跳转）');
+                    window.location.href = 'order.html';  // 实际跳转
+                }
+            });
+            identityTrigger.addEventListener('click', openModal);
+            window.addEventListener('load', () => {
+                openModal();
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    if (nickname) {
+                        closeModal();
+                    } else {
+                        alert('请先填写昵称和身份');
+                    }
+                }
+            });
 
             // FAQ 折叠
             document.querySelectorAll('.faq-item').forEach(item => {
